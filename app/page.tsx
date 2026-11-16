@@ -21,66 +21,89 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         <p className="tagline">{hotel.tagline}</p>
       </section>
 
-      <section className="rooms">
-        {Object.entries(rooms).map(([id, room]) => (
-          <article key={id} className="room">
-            <h2>{room.name}</h2>
-            <p className="muted">{room.description}</p>
-            <p>
-              <strong>€{room.pricePerNight}</strong> / night · up to {room.maxGuests} guests
-            </p>
-          </article>
-        ))}
-      </section>
-
-      <section className="card">
-        <h2>Book your stay</h2>
-        <p className="muted">
-          No forms to fill in: you register with your EUDI wallet, and your booking goes straight into it.
-        </p>
+      <section className="card booking">
+        <header className="booking-head">
+          <h2>Book your stay</h2>
+          <p className="muted">
+            No forms to fill in: you register with your EUDI wallet, and your
+            booking goes straight into it.
+          </p>
+        </header>
         {typeof error === "string" && errors[error] && (
-          <p className="bad" role="alert">
+          <p className="alert" role="alert">
             {errors[error]}
           </p>
         )}
-        <form action={startBooking} className="form">
-          <label>
-            Room
-            <select name="roomType" defaultValue="deluxe">
+        <form action={startBooking} className="booking-form">
+          <fieldset>
+            <legend>1. Choose your room</legend>
+            <div className="room-options">
               {Object.entries(rooms).map(([id, room]) => (
-                <option key={id} value={id}>
-                  {room.name} · €{room.pricePerNight}/night
-                </option>
+                <label key={id} className="room-option">
+                  <input
+                    type="radio"
+                    name="roomType"
+                    value={id}
+                    defaultChecked={id === "deluxe"}
+                    required
+                  />
+                  <span className="room-name">{room.name}</span>
+                  <span className="room-desc">{room.description}</span>
+                  <span className="room-meta">
+                    <span className="room-price">€{room.pricePerNight}</span> /
+                    night · up to {room.maxGuests} guests
+                  </span>
+                </label>
               ))}
-            </select>
-          </label>
-          <label>
-            Arrival
-            <input type="date" name="checkIn" defaultValue={today} min={today} required />
-          </label>
-          <label>
-            Departure
-            <input type="date" name="checkOut" defaultValue={addDays(today, 2)} min={addDays(today, 1)} required />
-          </label>
-          <label>
-            Guests
-            <select name="guests" defaultValue="2">
-              {[1, 2, 3, 4].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className="cta">
-            Continue
-          </button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>2. Your stay</legend>
+            <div className="stay-fields">
+              <label className="field">
+                <span>Arrival</span>
+                <input
+                  type="date"
+                  name="checkIn"
+                  defaultValue={today}
+                  min={today}
+                  required
+                />
+              </label>
+              <label className="field">
+                <span>Departure</span>
+                <input
+                  type="date"
+                  name="checkOut"
+                  defaultValue={addDays(today, 2)}
+                  min={addDays(today, 1)}
+                  required
+                />
+              </label>
+              <label className="field">
+                <span>Guests</span>
+                <select name="guests" defaultValue="2">
+                  {[1, 2, 3, 4].map((n) => (
+                    <option key={n} value={n}>
+                      {n} {n === 1 ? "guest" : "guests"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <div className="booking-footer">
+            <p className="muted">
+              Next: register with your EUDI wallet. Payment at the hotel.
+            </p>
+            <button type="submit" className="cta">
+              Continue
+            </button>
+          </div>
         </form>
       </section>
-
-      <p className="muted center">
-        Already booked and standing in the lobby? <Link href="/reception">Reception check-in</Link>
-      </p>
     </main>
   );
 }
