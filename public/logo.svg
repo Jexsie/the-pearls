@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>The Pearls</title>
-  <defs>
-    <radialGradient id="pearl" cx="0.38" cy="0.35" r="0.75">
-      <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.55" stop-color="#eef0f5"/>
-      <stop offset="1" stop-color="#b9c2d3"/>
-    </radialGradient>
-  </defs>
-  <rect width="64" height="64" rx="14" fill="#123b4a"/>
-  <!-- Harbour waves -->
-  <path d="M8 48 Q16 43 24 48 T40 48 T56 48" fill="none" stroke="#c9a96e" stroke-width="3" stroke-linecap="round"/>
-  <!-- Pearl -->
-  <circle cx="32" cy="28" r="14" fill="url(#pearl)"/>
-  <ellipse cx="27" cy="22.5" rx="4.5" ry="3" fill="#ffffff" opacity="0.9"/>
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Monogram" clip-path="url(#clip0_0_4)">
+<circle id="Shell" cx="15" cy="15" r="14.5" stroke="#1F3B2F"/>
+<circle id="Pearl" cx="17" cy="13.5" r="5.25" fill="url(#paint0_radial_0_4)" stroke-width="0.5" stroke="#1F3B2F"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(18.65 15.7) scale(5.5)">
+<stop stop-color="#FFFCF7"/>
+<stop offset="0.55" stop-color="#DBCFB8"/>
+<stop offset="1" stop-color="#9E8C6E"/>
+</radialGradient>
+<clipPath id="clip0_0_4">
+<rect width="30" height="30" fill="white"/>
+</clipPath>
+</defs>
 </svg>

@@ -1,10 +1,13 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { formatDate, hotel, nights, rooms } from "@/lib/hotel";
+import { displayName, formatDate, formatLongDate, rooms } from "@/lib/hotel";
 import { BOOKING_COOKIE, bookings } from "@/lib/store";
 import { startOver } from "../actions";
-import WalletStep from "../wallet-step";
+import { CheckoutHeader, SiteFooter } from "../chrome";
+import { Icon } from "../icons";
+import StaySummary from "../stay-summary";
+import IssuePanel from "./issue-panel";
 
 /** Step 3: confirmed booking, then the booking credential goes into the wallet. */
 export default async function Confirmation() {
@@ -12,79 +15,49 @@ export default async function Confirmation() {
   if (!booking) redirect("/");
   if (booking.status !== "confirmed" || !booking.guest) redirect("/book");
 
-  const { guest } = booking;
-  const address = [guest.address.street_address, `${guest.address.postal_code ?? ""} ${guest.address.locality ?? ""}`.trim(), guest.address.country]
-    .filter(Boolean)
-    .join(", ");
+  const firstName = displayName(booking.guest.givenName);
+  const room = rooms[booking.roomType];
 
   return (
-    <main className="page narrow">
-      <p className="steps">1 Room · 2 Your details · <strong>3 Confirmation</strong></p>
-      <section className="card">
-        <p className="ok">✓ Booking confirmed</p>
-        <h1>
-          See you soon, {guest.givenName.charAt(0)}
-          {guest.givenName.slice(1).toLowerCase()}!
-        </h1>
-        <dl className="summary">
-          <dt>Booking number</dt>
-          <dd>
-            <strong>{booking.id}</strong>
-          </dd>
-          <dt>Room</dt>
-          <dd>{rooms[booking.roomType].name}</dd>
-          <dt>Dates</dt>
-          <dd>
-            {formatDate(booking.checkIn)} → {formatDate(booking.checkOut)} ({nights(booking.checkIn, booking.checkOut)} nights)
-          </dd>
-          <dt>Guests</dt>
-          <dd>{booking.guests}</dd>
-          <dt>Total</dt>
-          <dd>€{booking.total} · pay at the hotel</dd>
-        </dl>
-      </section>
-
-      <section className="card">
-        <h2>Guest registration</h2>
-        <p className="muted">Filled in from your verified ID, no typing needed.</p>
-        <dl className="summary">
-          <dt>Name</dt>
-          <dd>
-            {guest.givenName} {guest.familyName}
-          </dd>
-          <dt>Born</dt>
-          <dd>{formatDate(guest.birthdate)}</dd>
-          <dt>Nationality</dt>
-          <dd>{guest.nationality}</dd>
-          <dt>Address</dt>
-          <dd>{address}</dd>
-        </dl>
-      </section>
-
-      <section className="card">
-        <h2>Add your booking to your wallet</h2>
-        <WalletStep
-          endpoint="/api/booking-credential"
-          startLabel="Add booking to my wallet"
-          intro={
-            <p>
-              Your booking becomes a document in your wallet, signed by {hotel.name}. Show it at reception on
-              arrival: no booking number, no paperwork.
+    <>
+      <CheckoutHeader step={3} />
+      <main className="confirmed">
+        <section className="confirmation">
+          <div className="message">
+            <p className="eyebrow ok">
+              <Icon name="check" size={16} /> Booking confirmed · {booking.id}
             </p>
-          }
-          waiting="Scan with your wallet to add the booking."
-          restartLabel="Add it again"
-        />
-      </section>
+            <h1>Your stay is confirmed, {firstName}.</h1>
+            <p className="lead">
+              We look forward to welcoming you on {formatLongDate(booking.checkIn).replace(/ \d{4}$/, "")}. Your{" "}
+              {room.name.replace(/^The /, "").toLowerCase().includes("suite") ? "suite" : "room"} will be ready from
+              15:00.
+            </p>
+            <form action={startOver} className="small muted">
+              Arriving today? <Link href="/reception">Check in at reception</Link> ·{" "}
+              <button type="submit" className="text-link">
+                Make another booking
+              </button>
+            </form>
+          </div>
+          <StaySummary booking={booking} compact />
+        </section>
 
-      <p className="muted center">
-        Arriving now? Go to <Link href="/reception">reception check-in</Link>.
-      </p>
-      <form action={startOver}>
-        <button type="submit" className="link">
-          Make another booking
-        </button>
-      </form>
-    </main>
+        <IssuePanel
+          card={{
+            name: displayName(`${booking.guest.givenName} ${booking.guest.familyName}`),
+            firstName,
+            checkIn: formatDate(booking.checkIn),
+            checkOut: formatDate(booking.checkOut),
+            room: room.name.replace(/^The /, ""),
+            bookingId: booking.id,
+          }}
+        />
+
+        {/* eslint-disable-next-line @next/next/no-img-element -- static photo */}
+        <img className="detail" src="/photos/detail-breakfast.jpg" alt="A breakfast tray by the window" />
+      </main>
+      <SiteFooter />
+    </>
   );
 }

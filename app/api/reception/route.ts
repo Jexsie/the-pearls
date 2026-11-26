@@ -1,6 +1,15 @@
 import { createHash } from "node:crypto";
 import { createPresentation, failureMessage, getSession, ids } from "@/lib/eudiplo";
-import { formatDate, hotelToday, nights } from "@/lib/hotel";
+import {
+  adults,
+  displayName,
+  formatLongDate,
+  formatRange,
+  hotelToday,
+  nights,
+  roomIdByName,
+  rooms,
+} from "@/lib/hotel";
 import { qrDataUrl } from "@/lib/qr";
 import { bookings, receptionChecks } from "@/lib/store";
 
@@ -39,7 +48,7 @@ export async function GET(request: Request) {
       receptionChecks.delete(checkId);
       return Response.json({ state: "expired", message: "The request expired. Please try again." });
     }
-    if (session.status !== "completed") return Response.json({ state: "pending" });
+    if (session.status !== "completed") return Response.json({ state: "pending", scanned: session.status === "fetched" });
     receptionChecks.delete(checkId);
 
     // EUDIPLO has verified that The Pearls signed this booking. Now the hotel's own rules.
@@ -49,11 +58,20 @@ export async function GET(request: Request) {
     const checkOut = String(b.check_out ?? "");
     const today = hotelToday();
 
+    // "notToday": the tablet shows "This booking isn't valid for today."
     if (today < checkIn) {
-      return Response.json({ state: "failed", message: `Your booking ${bookingId} starts on ${formatDate(checkIn)}.` });
+      return Response.json({
+        state: "failed",
+        reason: "notToday",
+        message: `Booking ${bookingId} begins on ${formatLongDate(checkIn)}. Please speak to a member of our team — we’ll gladly help.`,
+      });
     }
     if (today >= checkOut) {
-      return Response.json({ state: "failed", message: `Your booking ${bookingId} ended on ${formatDate(checkOut)}.` });
+      return Response.json({
+        state: "failed",
+        reason: "notToday",
+        message: `Booking ${bookingId} ended on ${formatLongDate(checkOut)}. Please speak to a member of our team — we’ll gladly help.`,
+      });
     }
     // The signed booking must also match our own records, when we still have them.
     const record = bookings.get(bookingId);
@@ -61,18 +79,18 @@ export async function GET(request: Request) {
       return Response.json({ state: "failed", message: "This booking does not match our records. Please see the front desk." });
     }
 
-    const name = String(b.given_name ?? "");
-    const left = nights(today, checkOut);
+    const roomType = String(b.room_type ?? "");
+    const stay = nights(checkIn, checkOut);
     return Response.json({
       state: "done",
       result: {
-        title: `Welcome to The Pearls, ${name.charAt(0)}${name.slice(1).toLowerCase()}!`,
-        lines: [
-          `Booking ${bookingId}: ${String(b.room_type ?? "")}, ${String(b.guests ?? "")} guest(s)`,
-          `Your room: ${roomNumber(bookingId, String(b.room_type ?? ""))}`,
-          `Check-out: ${formatDate(checkOut)}, 11:00 (${left} night${left === 1 ? "" : "s"})`,
-          "Breakfast 7:00–10:30 on the harbour terrace",
-        ],
+        name: displayName(String(b.given_name ?? "")),
+        bookingId,
+        roomType,
+        roomId: roomIdByName(roomType) ?? null,
+        roomNumber: roomNumber(bookingId, roomType),
+        stay: `${formatRange(checkIn, checkOut)} · ${stay} night${stay === 1 ? "" : "s"}`,
+        guests: adults(Number(b.guests ?? 1)),
       },
     });
   } catch (error) {
@@ -81,9 +99,9 @@ export async function GET(request: Request) {
   }
 }
 
-/** A stable room number per booking: Standard 2xx, Deluxe 3xx, Pearl Suite 5xx. */
+/** A stable room number per booking, on the floor of its room type (lib/hotel.ts). */
 function roomNumber(bookingId: string, roomType: string) {
-  const floor = roomType.startsWith("Pearl") ? 5 : roomType === "Deluxe" ? 3 : 2;
+  const floor = Object.values(rooms).find((room) => room.name === roomType)?.floor ?? 2;
   const n = createHash("sha256").update(bookingId).digest()[0] % 20;
   return `${floor}${String(n + 1).padStart(2, "0")}`;
 }

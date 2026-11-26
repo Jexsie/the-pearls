@@ -22,8 +22,11 @@ export type Booking = {
   checkIn: string;
   checkOut: string;
   guests: number;
+  /** Room plus city tax, in euros. */
   total: number;
+  /** Set when the guest's PID has been verified; confirmed afterwards by the guest. */
   guest?: Guest;
+  registeredAt?: number;
   /** EUDIPLO session of the guest's PID check (server only). */
   guestCheck?: { sessionId: string; expiresAt: number };
   /** EUDIPLO session of the booking credential offer (server only). */

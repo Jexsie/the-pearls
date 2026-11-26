@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { addDays, hotelToday, isRoomId, nights, rooms } from "@/lib/hotel";
+import { addDays, hotelToday, isRoomId, nights, price, rooms } from "@/lib/hotel";
 import { BOOKING_COOKIE, bookings, newBookingId } from "@/lib/store";
 
 const secure = (process.env.APP_URL ?? "").startsWith("https://");
@@ -32,7 +32,7 @@ export async function startBooking(formData: FormData) {
     checkIn,
     checkOut,
     guests,
-    total: stay * rooms[roomType].pricePerNight,
+    total: price(roomType, checkIn, checkOut, guests).total,
   });
   (await cookies()).set(BOOKING_COOKIE, id, {
     httpOnly: true,
@@ -41,6 +41,31 @@ export async function startBooking(formData: FormData) {
     path: "/",
     maxAge: 7 * 24 * 3600,
   });
+  redirect("/book");
+}
+
+async function currentDraft() {
+  const booking = bookings.get((await cookies()).get(BOOKING_COOKIE)?.value);
+  return booking?.status === "draft" ? booking : undefined;
+}
+
+/** Step 2b: the guest has checked the details from their wallet and confirms. */
+export async function confirmBooking() {
+  const booking = await currentDraft();
+  if (!booking) redirect("/");
+  if (!booking.guest) redirect("/book");
+  booking.status = "confirmed";
+  bookings.save(booking);
+  redirect("/booking");
+}
+
+/** Drops the details from the wallet, so the guest can scan again. */
+export async function scanAgain() {
+  const booking = await currentDraft();
+  if (!booking) redirect("/");
+  booking.guest = undefined;
+  booking.registeredAt = undefined;
+  bookings.save(booking);
   redirect("/book");
 }
 

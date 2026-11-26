@@ -6,7 +6,7 @@ A small hotel site that shows both directions of EUDI wallets with EUDIPLO
 | Step | Page | EUDIPLO |
 | --- | --- | --- |
 | 1. Pick room and dates | `/` | — |
-| 2. Register with the wallet | `/book` | **Presentation** `guest-pid`: name, birth date, nationality and address from a Demo Government PID |
+| 2. Register with the wallet, check the details, confirm | `/book` | **Presentation** `guest-pid`: name, birth date, nationality and address from a Demo Government PID |
 | 3. Booking confirmed, add it to the wallet | `/booking` | **Issuance** of the `booking` credential (`urn:demo:the-pearls:booking:1`) |
 | 4. Arrival at reception | `/reception` | **Presentation** `booking-check`: only bookings signed by The Pearls (own trust list) |
 
@@ -19,7 +19,8 @@ npm run dev                  # http://localhost:3002
 ## Hotel rules (the business logic)
 
 - The guest who books must be **18 or older on the day of arrival** (from the PID's birth date).
-- The guest registration is filled from the verified PID, no typing.
+- The guest registration is filled from the verified PID, no typing. The guest checks it and confirms the booking.
+- The total includes the city tax (€3.50 per guest and night).
 - The booking credential carries `check_in` and `check_out`. EUDIPLO sets the
   credential's own expiry per credential type (30 days), so **reception enforces
   the stay dates**: check-in is accepted from the arrival day until the day

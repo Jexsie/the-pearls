@@ -44,7 +44,8 @@ export async function GET() {
     if (session.status === "expired" || (session.status !== "completed" && Date.now() > booking.guestCheck.expiresAt + 5_000)) {
       return Response.json({ state: "expired", message: "The request expired. Please try again." });
     }
-    if (session.status !== "completed") return Response.json({ state: "pending" });
+    // "fetched": the wallet has scanned the code and shows the request to the guest.
+    if (session.status !== "completed") return Response.json({ state: "pending", scanned: session.status === "fetched" });
 
     const pid = session.credentials?.[0]?.values?.[0] ?? {};
     const guest: Guest = {
@@ -63,8 +64,9 @@ export async function GET() {
       });
     }
 
+    // Registered, not yet confirmed: the guest checks the details, then confirms (confirmBooking).
     booking.guest = guest;
-    booking.status = "confirmed";
+    booking.registeredAt = Date.now();
     booking.guestCheck = undefined;
     bookings.save(booking);
     return Response.json({ state: "done" });
